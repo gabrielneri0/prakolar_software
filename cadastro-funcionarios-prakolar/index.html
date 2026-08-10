@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prakolar | Cadastro de Funcionários</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <div class="logo-box"><span><img src="./img/video-cover-Photoroom.png" alt="Prakolar" class="logo"></span></div>
+  <h1>Cadastro de Funcionários</h1>
+  <p>Prakolar</p>
+</header>
+
+<main>
+  <div class="toolbar">
+    <div>
+      <h2>Funcionários</h2>
+      <p id="contador">0 funcionário(s) cadastrado(s)</p>
+    </div>
+    <button class="btn-primary" onclick="abrirCadastro()">+ Cadastrar Funcionário</button>
+  </div>
+
+  <div id="empty" class="empty-state" style="display:none;">
+    Nenhum funcionário cadastrado ainda.<br>
+    Clique em "+ Cadastrar Funcionário" para começar.
+  </div>
+
+  <table id="tabela">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Função</th>
+        <th>Horário</th>
+        <th>Escala</th>
+        <th>Modalidade</th>
+        <th>Avaliação</th>
+        <th style="text-align:right;">Ações</th>
+      </tr>
+    </thead>
+    <tbody id="tabelaCorpo"></tbody>
+  </table>
+
+  <div id="cards" class="cards"></div>
+</main>
+
+<!-- Modal de cadastro/edição -->
+<div class="overlay" id="overlayForm">
+  <form class="modal" id="formFuncionario" onsubmit="return salvarFuncionario(event)">
+    <h2 id="tituloForm">Cadastrar Funcionário</h2>
+
+    <div class="erros" id="errosForm" style="display:none;">
+      <ul id="listaErros"></ul>
+    </div>
+
+    <div class="campo">
+      <label for="campoNome">Nome</label>
+      <input type="text" id="campoNome" placeholder="Nome completo do funcionário" />
+    </div>
+
+    <div class="campo">
+      <label for="campoFuncao">Função</label>
+      <input type="text" id="campoFuncao" placeholder="Ex: Analista, Supervisor, Operador..." />
+    </div>
+
+    <div class="campo">
+      <label>Tipo de horário</label>
+      <div class="radio-grupo">
+        <label class="radio-opcao" id="opComercial">
+          <input type="radio" name="tipoHorario" value="COMERCIAL" onchange="mudarTipoHorario('COMERCIAL')" />
+          Horário Comercial
+        </label>
+        <label class="radio-opcao" id="opFlexivel">
+          <input type="radio" name="tipoHorario" value="FLEXIVEL" onchange="mudarTipoHorario('FLEXIVEL')" />
+          Horário Flexível
+        </label>
+      </div>
+    </div>
+
+    <div class="linha-dupla">
+      <div class="campo">
+        <label for="campoEntrada">Entrada</label>
+        <input type="time" id="campoEntrada" />
+      </div>
+      <div class="campo">
+        <label for="campoSaida">Saída</label>
+        <input type="time" id="campoSaida" />
+      </div>
+    </div>
+
+    <div class="linha-dupla">
+      <div class="campo">
+        <label for="campoEscala">Escala</label>
+        <select id="campoEscala">
+          <option value="6x1">6x1</option>
+          <option value="5x2">5x2</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="campoModalidade">Modalidade</label>
+        <select id="campoModalidade">
+          <option value="PRESENCIAL">Presencial</option>
+          <option value="HOME_OFFICE">Home Office</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="campo">
+      <div class="avaliacao-valor">
+        <span>Avaliação de desempenho</span>
+        <strong id="valorAvaliacao">5.0</strong>
+      </div>
+      <input type="range" id="campoAvaliacao" min="0" max="10" step="0.5" value="5" oninput="atualizarValorAvaliacao()" />
+      <div class="range-legenda"><span>0</span><span>10</span></div>
+    </div>
+
+    <div class="modal-acoes">
+      <button type="button" class="btn-cancelar" onclick="fecharForm()">Cancelar</button>
+      <button type="submit" class="btn-primary" id="btnSalvar">Cadastrar Funcionário</button>
+    </div>
+  </form>
+</div>
+
+<!-- Modal de confirmação de exclusão -->
+<div class="overlay" id="overlayExcluir">
+  <div class="modal modal-confirm">
+    <h2>Excluir funcionário</h2>
+    <p id="mensagemExcluir">Tem certeza que deseja excluir este funcionário?</p>
+    <div class="modal-acoes">
+      <button type="button" class="btn-cancelar" onclick="fecharExcluir()">Cancelar</button>
+      <button type="button" class="btn-excluir-confirmar" onclick="confirmarExclusao()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
