@@ -1,0 +1,1284 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Prakolar | Estoque</title>
+
+  <link rel="stylesheet" href="estoque.css" />
+</head>
+
+<body>
+
+  <header>
+    <div class="logo-box">
+      <img
+        src="./img/video-cover-Photoroom.png"
+        alt="Prakolar"
+        class="logo"
+      >
+    </div>
+
+    <h1>Controle de Estoque</h1>
+    <p>Prakolar</p>
+  </header>
+
+  <main>
+
+    <!-- Cabeçalho da página -->
+    <div class="toolbar">
+      <div>
+        <h2>Estoque</h2>
+        <p id="contador">0 item(ns) cadastrado(s)</p>
+      </div>
+
+      <button class="btn-primary" onclick="abrirCadastro()">
+        + Cadastrar Material
+      </button>
+    </div>
+
+    <!-- Resumo -->
+    <div class="resumo">
+
+      <div class="resumo-card">
+        <span>Total de itens</span>
+        <strong id="totalItens">0</strong>
+      </div>
+
+      <div class="resumo-card">
+        <span>Estoque normal</span>
+        <strong class="texto-verde" id="totalNormal">0</strong>
+      </div>
+
+      <div class="resumo-card">
+        <span>Estoque baixo</span>
+        <strong class="texto-amarelo" id="totalBaixo">0</strong>
+      </div>
+
+      <div class="resumo-card">
+        <span>Estoque crítico</span>
+        <strong class="texto-vermelho" id="totalCritico">0</strong>
+      </div>
+
+    </div>
+
+    <!-- Pesquisa e filtros -->
+    <div class="filtros">
+
+      <input
+        type="text"
+        id="campoBusca"
+        placeholder="🔎 Pesquisar material..."
+        oninput="renderizarEstoque()"
+      >
+
+      <select id="filtroCategoria" onchange="renderizarEstoque()">
+        <option value="">Todas as categorias</option>
+        <option value="PAPEL">Papéis</option>
+        <option value="TINTA">Tintas e Insumos</option>
+        <option value="ACABAMENTO">Acabamento</option>
+        <option value="DIVERSOS">Materiais Diversos</option>
+      </select>
+
+      <select id="filtroStatus" onchange="renderizarEstoque()">
+        <option value="">Todos os status</option>
+        <option value="NORMAL">Normal</option>
+        <option value="BAIXO">Baixo</option>
+        <option value="CRITICO">Crítico</option>
+      </select>
+
+    </div>
+
+    <!-- Estado vazio -->
+    <div id="empty" class="empty-state" style="display:none;">
+      Nenhum material encontrado.
+    </div>
+
+    <!-- Tabela -->
+    <div class="tabela-container">
+
+      <table id="tabela">
+
+        <thead>
+          <tr>
+            <th>Material</th>
+            <th>Categoria</th>
+            <th>Quantidade</th>
+            <th>Unidade</th>
+            <th>Estoque mínimo</th>
+            <th>Status</th>
+            <th style="text-align:right;">Ações</th>
+          </tr>
+        </thead>
+
+        <tbody id="tabelaCorpo"></tbody>
+
+      </table>
+
+    </div>
+
+    <!-- Cards para mobile -->
+    <div id="cards" class="cards"></div>
+
+  </main>
+
+
+  <!-- Modal de cadastro -->
+  <div class="overlay" id="overlayForm">
+
+    <form class="modal" id="formMaterial" onsubmit="return salvarMaterial(event)">
+
+      <h2 id="tituloForm">Cadastrar Material</h2>
+
+      <div class="erros" id="errosForm" style="display:none;">
+        <ul id="listaErros"></ul>
+      </div>
+
+      <div class="campo">
+        <label for="campoNome">Nome do material</label>
+        <input
+          type="text"
+          id="campoNome"
+          placeholder="Ex: Papel Couchê 250g"
+        >
+      </div>
+
+      <div class="linha-dupla">
+
+        <div class="campo">
+          <label for="campoCategoria">Categoria</label>
+
+          <select id="campoCategoria">
+            <option value="PAPEL">Papéis</option>
+            <option value="TINTA">Tintas e Insumos</option>
+            <option value="ACABAMENTO">Acabamento</option>
+            <option value="DIVERSOS">Materiais Diversos</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="campoUnidade">Unidade</label>
+
+          <select id="campoUnidade">
+            <option value="Unidade">Unidade</option>
+            <option value="Folha">Folha</option>
+            <option value="Resma">Resma</option>
+            <option value="Rolo">Rolo</option>
+            <option value="Metro">Metro</option>
+            <option value="Litro">Litro</option>
+            <option value="Quilograma">Quilograma</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="linha-dupla">
+
+        <div class="campo">
+          <label for="campoQuantidade">Quantidade atual</label>
+          <input
+            type="number"
+            id="campoQuantidade"
+            min="0"
+            step="0.01"
+            placeholder="0"
+          >
+        </div>
+
+        <div class="campo">
+          <label for="campoMinimo">Estoque mínimo</label>
+          <input
+            type="number"
+            id="campoMinimo"
+            min="0"
+            step="0.01"
+            placeholder="0"
+          >
+        </div>
+
+      </div>
+
+      <div class="campo">
+        <label for="campoLocalizacao">Localização</label>
+
+        <input
+          type="text"
+          id="campoLocalizacao"
+          placeholder="Ex: Prateleira A1"
+        >
+      </div>
+
+      <div class="campo">
+        <label for="campoFornecedor">Fornecedor</label>
+
+        <input
+          type="text"
+          id="campoFornecedor"
+          placeholder="Nome do fornecedor"
+        >
+      </div>
+
+      <div class="campo">
+        <label for="campoPreco">Preço de compra</label>
+
+        <input
+          type="number"
+          id="campoPreco"
+          min="0"
+          step="0.01"
+          placeholder="0,00"
+        >
+      </div>
+
+      <div class="modal-acoes">
+
+        <button
+          type="button"
+          class="btn-cancelar"
+          onclick="fecharForm()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          class="btn-primary"
+        >
+          Cadastrar Material
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+
+  <!-- Modal de movimentação -->
+  <div class="overlay" id="overlayMovimentacao">
+
+    <form
+      class="modal"
+      id="formMovimentacao"
+      onsubmit="return salvarMovimentacao(event)"
+    >
+
+      <h2>Registrar movimentação</h2>
+
+      <p class="material-selecionado" id="materialSelecionado"></p>
+
+      <div class="campo">
+
+        <label>Tipo de movimentação</label>
+
+        <div class="radio-grupo">
+
+          <label class="radio-opcao selecionado">
+            <input
+              type="radio"
+              name="tipoMovimentacao"
+              value="ENTRADA"
+              checked
+            >
+            Entrada
+          </label>
+
+          <label class="radio-opcao">
+            <input
+              type="radio"
+              name="tipoMovimentacao"
+              value="SAIDA"
+            >
+            Saída
+          </label>
+
+        </div>
+
+      </div>
+
+      <div class="campo">
+
+        <label for="campoQuantidadeMovimentacao">
+          Quantidade
+        </label>
+
+        <input
+          type="number"
+          id="campoQuantidadeMovimentacao"
+          min="0.01"
+          step="0.01"
+          placeholder="Quantidade"
+        >
+
+      </div>
+
+      <div class="campo">
+
+        <label for="campoMotivo">
+          Motivo
+        </label>
+
+        <select id="campoMotivo">
+
+          <option value="COMPRA">Compra</option>
+          <option value="PRODUCAO">Produção</option>
+          <option value="PERDA">Perda</option>
+          <option value="AJUSTE">Ajuste de estoque</option>
+          <option value="OUTROS">Outros</option>
+
+        </select>
+
+      </div>
+
+      <div class="campo">
+
+        <label for="campoObservacao">
+          Observação
+        </label>
+
+        <textarea
+          id="campoObservacao"
+          placeholder="Observação opcional..."
+        ></textarea>
+
+      </div>
+
+      <div class="modal-acoes">
+
+        <button
+          type="button"
+          class="btn-cancelar"
+          onclick="fecharMovimentacao()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          class="btn-primary"
+        >
+          Registrar
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+
+  <!-- Modal de histórico -->
+  <div class="overlay" id="overlayHistorico">
+
+    <div class="modal">
+
+      <h2>Histórico do material</h2>
+
+      <p
+        class="material-selecionado"
+        id="historicoMaterial"
+      ></p>
+
+      <div
+        class="historico"
+        id="listaHistorico"
+      ></div>
+
+      <div class="modal-acoes">
+
+        <button
+          type="button"
+          class="btn-cancelar"
+          onclick="fecharHistorico()"
+        >
+          Fechar
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div id="toast"></div>
+
+
+  <script>
+
+    /*
+      Materiais iniciais da gráfica.
+      Caso o navegador ainda não tenha dados salvos,
+      estes materiais serão cadastrados automaticamente.
+    */
+
+    const materiaisIniciais = [
+      {
+        id: 1,
+        nome: "Papel Couchê 250g",
+        categoria: "PAPEL",
+        unidade: "Folha",
+        quantidade: 850,
+        minimo: 500,
+        localizacao: "Prateleira A1",
+        fornecedor: "Papelaria Central",
+        preco: 0.85,
+        historico: []
+      },
+
+      {
+        id: 2,
+        nome: "Papel Offset 90g",
+        categoria: "PAPEL",
+        unidade: "Folha",
+        quantidade: 1200,
+        minimo: 500,
+        localizacao: "Prateleira A2",
+        fornecedor: "Papelaria Central",
+        preco: 0.22,
+        historico: []
+      },
+
+      {
+        id: 3,
+        nome: "Papel Adesivo",
+        categoria: "PAPEL",
+        unidade: "Folha",
+        quantidade: 180,
+        minimo: 200,
+        localizacao: "Prateleira A3",
+        fornecedor: "Adesivos Brasil",
+        preco: 1.15,
+        historico: []
+      },
+
+      {
+        id: 4,
+        nome: "Tinta Preta",
+        categoria: "TINTA",
+        unidade: "Litro",
+        quantidade: 1.2,
+        minimo: 2,
+        localizacao: "Armário B1",
+        fornecedor: "Suprimentos Gráficos",
+        preco: 145,
+        historico: []
+      },
+
+      {
+        id: 5,
+        nome: "Tinta Ciano",
+        categoria: "TINTA",
+        unidade: "Litro",
+        quantidade: 3,
+        minimo: 2,
+        localizacao: "Armário B1",
+        fornecedor: "Suprimentos Gráficos",
+        preco: 138,
+        historico: []
+      },
+
+      {
+        id: 6,
+        nome: "Tinta Magenta",
+        categoria: "TINTA",
+        unidade: "Litro",
+        quantidade: 2.5,
+        minimo: 2,
+        localizacao: "Armário B1",
+        fornecedor: "Suprimentos Gráficos",
+        preco: 138,
+        historico: []
+      },
+
+      {
+        id: 7,
+        nome: "Tinta Amarela",
+        categoria: "TINTA",
+        unidade: "Litro",
+        quantidade: 2.8,
+        minimo: 2,
+        localizacao: "Armário B1",
+        fornecedor: "Suprimentos Gráficos",
+        preco: 138,
+        historico: []
+      },
+
+      {
+        id: 8,
+        nome: "Espiral 9mm",
+        categoria: "ACABAMENTO",
+        unidade: "Unidade",
+        quantidade: 75,
+        minimo: 100,
+        localizacao: "Prateleira C1",
+        fornecedor: "Acabamentos SP",
+        preco: 0.45,
+        historico: []
+      },
+
+      {
+        id: 9,
+        nome: "Capa Transparente A4",
+        categoria: "ACABAMENTO",
+        unidade: "Unidade",
+        quantidade: 320,
+        minimo: 150,
+        localizacao: "Prateleira C2",
+        fornecedor: "Acabamentos SP",
+        preco: 0.70,
+        historico: []
+      },
+
+      {
+        id: 10,
+        nome: "Grampo para Grampeador",
+        categoria: "DIVERSOS",
+        unidade: "Caixa",
+        quantidade: 15,
+        minimo: 5,
+        localizacao: "Armário D1",
+        fornecedor: "Papelaria Central",
+        preco: 12.50,
+        historico: []
+      }
+    ];
+
+
+    let materiais = JSON.parse(localStorage.getItem("prakolarEstoque"));
+
+    if (!materiais) {
+      materiais = materiaisIniciais;
+      salvarDados();
+    }
+
+    let materialMovimentacao = null;
+
+
+    function salvarDados() {
+      localStorage.setItem(
+        "prakolarEstoque",
+        JSON.stringify(materiais)
+      );
+    }
+
+
+    function obterStatus(material) {
+
+      if (material.quantidade <= material.minimo * 0.5) {
+        return "CRITICO";
+      }
+
+      if (material.quantidade <= material.minimo) {
+        return "BAIXO";
+      }
+
+      return "NORMAL";
+    }
+
+
+    function nomeCategoria(categoria) {
+
+      const categorias = {
+        PAPEL: "Papéis",
+        TINTA: "Tintas e Insumos",
+        ACABAMENTO: "Acabamento",
+        DIVERSOS: "Materiais Diversos"
+      };
+
+      return categorias[categoria] || categoria;
+    }
+
+
+    function classeStatus(status) {
+
+      if (status === "CRITICO") return "badge-vermelho";
+      if (status === "BAIXO") return "badge-amarelo";
+
+      return "badge-verde";
+    }
+
+
+    function nomeStatus(status) {
+
+      if (status === "CRITICO") return "Crítico";
+      if (status === "BAIXO") return "Baixo";
+
+      return "Normal";
+    }
+
+
+    function renderizarEstoque() {
+
+      const busca =
+        document
+          .getElementById("campoBusca")
+          .value
+          .toLowerCase();
+
+      const categoria =
+        document.getElementById("filtroCategoria").value;
+
+      const filtroStatus =
+        document.getElementById("filtroStatus").value;
+
+
+      const lista = materiais.filter(material => {
+
+        const correspondeBusca =
+          material.nome.toLowerCase().includes(busca);
+
+        const correspondeCategoria =
+          !categoria ||
+          material.categoria === categoria;
+
+        const correspondeStatus =
+          !filtroStatus ||
+          obterStatus(material) === filtroStatus;
+
+        return (
+          correspondeBusca &&
+          correspondeCategoria &&
+          correspondeStatus
+        );
+
+      });
+
+
+      atualizarResumo();
+
+
+      const corpo =
+        document.getElementById("tabelaCorpo");
+
+      corpo.innerHTML = "";
+
+
+      lista.forEach(material => {
+
+        const status = obterStatus(material);
+
+        const linha = document.createElement("tr");
+
+        linha.innerHTML = `
+          <td>
+            <strong>${material.nome}</strong>
+          </td>
+
+          <td>
+            ${nomeCategoria(material.categoria)}
+          </td>
+
+          <td>
+            ${material.quantidade}
+          </td>
+
+          <td>
+            ${material.unidade}
+          </td>
+
+          <td>
+            ${material.minimo}
+          </td>
+
+          <td>
+            <span class="badge ${classeStatus(status)}">
+              ${nomeStatus(status)}
+            </span>
+          </td>
+
+          <td>
+            <div class="acoes">
+
+              <button
+                class="btn-movimentar"
+                onclick="abrirMovimentacao(${material.id})"
+              >
+                Movimentar
+              </button>
+
+              <button
+                class="btn-historico"
+                onclick="abrirHistorico(${material.id})"
+              >
+                Histórico
+              </button>
+
+            </div>
+          </td>
+        `;
+
+        corpo.appendChild(linha);
+
+      });
+
+
+      renderizarCards(lista);
+
+
+      document.getElementById("empty").style.display =
+        lista.length === 0 ? "block" : "none";
+
+      document.getElementById("tabela").style.display =
+        lista.length === 0 ? "none" : "table";
+
+    }
+
+
+    function renderizarCards(lista) {
+
+      const cards =
+        document.getElementById("cards");
+
+      cards.innerHTML = "";
+
+
+      lista.forEach(material => {
+
+        const status = obterStatus(material);
+
+        const card = document.createElement("div");
+
+        card.className = "card";
+
+        card.innerHTML = `
+          <div class="card-top">
+
+            <div>
+              <div class="card-nome">
+                ${material.nome}
+              </div>
+
+              <div class="card-categoria">
+                ${nomeCategoria(material.categoria)}
+              </div>
+            </div>
+
+            <span class="badge ${classeStatus(status)}">
+              ${nomeStatus(status)}
+            </span>
+
+          </div>
+
+          <div class="card-info">
+
+            <span>Quantidade</span>
+            <span>${material.quantidade} ${material.unidade}</span>
+
+            <span>Estoque mínimo</span>
+            <span>${material.minimo}</span>
+
+            <span>Localização</span>
+            <span>${material.localizacao || "-"}</span>
+
+          </div>
+
+          <div class="card-acoes">
+
+            <button
+              class="btn-movimentar"
+              onclick="abrirMovimentacao(${material.id})"
+            >
+              Movimentar
+            </button>
+
+            <button
+              class="btn-historico"
+              onclick="abrirHistorico(${material.id})"
+            >
+              Histórico
+            </button>
+
+          </div>
+        `;
+
+        cards.appendChild(card);
+
+      });
+
+    }
+
+
+    function atualizarResumo() {
+
+      const normal =
+        materiais.filter(
+          material => obterStatus(material) === "NORMAL"
+        ).length;
+
+      const baixo =
+        materiais.filter(
+          material => obterStatus(material) === "BAIXO"
+        ).length;
+
+      const critico =
+        materiais.filter(
+          material => obterStatus(material) === "CRITICO"
+        ).length;
+
+
+      document.getElementById("totalItens").textContent =
+        materiais.length;
+
+      document.getElementById("totalNormal").textContent =
+        normal;
+
+      document.getElementById("totalBaixo").textContent =
+        baixo;
+
+      document.getElementById("totalCritico").textContent =
+        critico;
+
+      document.getElementById("contador").textContent =
+        `${materiais.length} item(ns) cadastrado(s)`;
+
+    }
+
+
+    function abrirCadastro() {
+
+      document.getElementById("overlayForm")
+        .classList.add("aberto");
+
+      document.getElementById("formMaterial").reset();
+
+      esconderErros();
+
+    }
+
+
+    function fecharForm() {
+
+      document.getElementById("overlayForm")
+        .classList.remove("aberto");
+
+    }
+
+
+    function salvarMaterial(event) {
+
+      event.preventDefault();
+
+
+      const nome =
+        document.getElementById("campoNome").value.trim();
+
+      const categoria =
+        document.getElementById("campoCategoria").value;
+
+      const unidade =
+        document.getElementById("campoUnidade").value;
+
+      const quantidade =
+        Number(document.getElementById("campoQuantidade").value);
+
+      const minimo =
+        Number(document.getElementById("campoMinimo").value);
+
+      const localizacao =
+        document.getElementById("campoLocalizacao").value.trim();
+
+      const fornecedor =
+        document.getElementById("campoFornecedor").value.trim();
+
+      const preco =
+        Number(document.getElementById("campoPreco").value);
+
+
+      const erros = [];
+
+
+      if (!nome) {
+        erros.push("Informe o nome do material.");
+      }
+
+      if (isNaN(quantidade) || quantidade < 0) {
+        erros.push("Informe uma quantidade válida.");
+      }
+
+      if (isNaN(minimo) || minimo < 0) {
+        erros.push("Informe um estoque mínimo válido.");
+      }
+
+      if (erros.length > 0) {
+
+        mostrarErros(erros);
+
+        return false;
+
+      }
+
+
+      const novoMaterial = {
+
+        id: Date.now(),
+
+        nome,
+        categoria,
+        unidade,
+        quantidade,
+        minimo,
+        localizacao,
+        fornecedor,
+        preco,
+
+        historico: [
+
+          {
+            data: new Date().toLocaleString("pt-BR"),
+            tipo: "CADASTRO",
+            quantidade,
+            motivo: "Cadastro inicial",
+            observacao: ""
+          }
+
+        ]
+
+      };
+
+
+      materiais.push(novoMaterial);
+
+      salvarDados();
+
+      fecharForm();
+
+      renderizarEstoque();
+
+      mostrarToast("Material cadastrado com sucesso.", "sucesso");
+
+
+      return false;
+
+    }
+
+
+    function abrirMovimentacao(id) {
+
+      materialMovimentacao =
+        materiais.find(material => material.id === id);
+
+
+      if (!materialMovimentacao) return;
+
+
+      document.getElementById("materialSelecionado")
+        .textContent =
+        materialMovimentacao.nome;
+
+
+      document.getElementById("formMovimentacao").reset();
+
+      document.querySelector(
+        'input[name="tipoMovimentacao"][value="ENTRADA"]'
+      ).checked = true;
+
+
+      document.getElementById("overlayMovimentacao")
+        .classList.add("aberto");
+
+    }
+
+
+    function fecharMovimentacao() {
+
+      document.getElementById("overlayMovimentacao")
+        .classList.remove("aberto");
+
+      materialMovimentacao = null;
+
+    }
+
+
+    function salvarMovimentacao(event) {
+
+      event.preventDefault();
+
+
+      if (!materialMovimentacao) return false;
+
+
+      const tipo =
+        document.querySelector(
+          'input[name="tipoMovimentacao"]:checked'
+        ).value;
+
+
+      const quantidade =
+        Number(
+          document.getElementById(
+            "campoQuantidadeMovimentacao"
+          ).value
+        );
+
+
+      const motivo =
+        document.getElementById("campoMotivo").value;
+
+
+      const observacao =
+        document.getElementById("campoObservacao").value.trim();
+
+
+      if (!quantidade || quantidade <= 0) {
+
+        mostrarToast(
+          "Informe uma quantidade válida.",
+          "erro"
+        );
+
+        return false;
+
+      }
+
+
+      if (
+        tipo === "SAIDA" &&
+        quantidade > materialMovimentacao.quantidade
+      ) {
+
+        mostrarToast(
+          "A quantidade de saída é maior que o estoque disponível.",
+          "erro"
+        );
+
+        return false;
+
+      }
+
+
+      if (tipo === "ENTRADA") {
+
+        materialMovimentacao.quantidade += quantidade;
+
+      } else {
+
+        materialMovimentacao.quantidade -= quantidade;
+
+      }
+
+
+      materialMovimentacao.historico.push({
+
+        data: new Date().toLocaleString("pt-BR"),
+
+        tipo,
+
+        quantidade,
+
+        motivo,
+
+        observacao
+
+      });
+
+
+      salvarDados();
+
+      fecharMovimentacao();
+
+      renderizarEstoque();
+
+
+      mostrarToast(
+        "Movimentação registrada com sucesso.",
+        "sucesso"
+      );
+
+
+      return false;
+
+    }
+
+
+    function abrirHistorico(id) {
+
+      const material =
+        materiais.find(material => material.id === id);
+
+
+      if (!material) return;
+
+
+      document.getElementById("historicoMaterial")
+        .textContent = material.nome;
+
+
+      const lista =
+        document.getElementById("listaHistorico");
+
+      lista.innerHTML = "";
+
+
+      if (
+        !material.historico ||
+        material.historico.length === 0
+      ) {
+
+        lista.innerHTML =
+          `<p class="sem-historico">
+            Nenhuma movimentação registrada.
+          </p>`;
+
+      } else {
+
+        [...material.historico]
+          .reverse()
+          .forEach(item => {
+
+            const div =
+              document.createElement("div");
+
+            div.className = "historico-item";
+
+
+            let titulo = item.tipo;
+
+            if (item.tipo === "ENTRADA")
+              titulo = "Entrada";
+
+            if (item.tipo === "SAIDA")
+              titulo = "Saída";
+
+            if (item.tipo === "CADASTRO")
+              titulo = "Cadastro";
+
+
+            div.innerHTML = `
+
+              <div class="historico-top">
+
+                <strong>${titulo}</strong>
+
+                <span>${item.data}</span>
+
+              </div>
+
+              <div class="historico-info">
+
+                Quantidade:
+                <strong>${item.quantidade}</strong>
+
+                ${item.motivo
+                  ? ` · ${item.motivo}`
+                  : ""
+                }
+
+              </div>
+
+              ${
+                item.observacao
+                  ? `<p>${item.observacao}</p>`
+                  : ""
+              }
+
+            `;
+
+
+            lista.appendChild(div);
+
+          });
+
+      }
+
+
+      document.getElementById("overlayHistorico")
+        .classList.add("aberto");
+
+    }
+
+
+    function fecharHistorico() {
+
+      document.getElementById("overlayHistorico")
+        .classList.remove("aberto");
+
+    }
+
+
+    function mostrarErros(erros) {
+
+      const lista =
+        document.getElementById("listaErros");
+
+      lista.innerHTML = "";
+
+
+      erros.forEach(erro => {
+
+        const li =
+          document.createElement("li");
+
+        li.textContent = erro;
+
+        lista.appendChild(li);
+
+      });
+
+
+      document.getElementById("errosForm")
+        .style.display = "block";
+
+    }
+
+
+    function esconderErros() {
+
+      document.getElementById("errosForm")
+        .style.display = "none";
+
+    }
+
+
+    function mostrarToast(mensagem, tipo) {
+
+      const toast =
+        document.getElementById("toast");
+
+
+      toast.textContent = mensagem;
+
+      toast.className = tipo;
+
+      toast.style.display = "block";
+
+
+      setTimeout(() => {
+
+        toast.style.display = "none";
+
+      }, 3000);
+
+    }
+
+
+    /*
+      Fecha os modais quando o usuário
+      clica fora deles.
+    */
+
+    document.querySelectorAll(".overlay")
+      .forEach(overlay => {
+
+        overlay.addEventListener("click", event => {
+
+          if (event.target === overlay) {
+
+            overlay.classList.remove("aberto");
+
+          }
+
+        });
+
+      });
+
+
+    renderizarEstoque();
+
+  </script>
+
+</body>
+</html>
+
